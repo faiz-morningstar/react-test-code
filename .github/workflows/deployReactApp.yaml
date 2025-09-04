@@ -1,4 +1,4 @@
-name: Deply Dist
+name: Deply React to github Pages
 on:
   push:
     branches:
@@ -48,21 +48,34 @@ jobs:
         run: npm ci
       - name: Build Project
         run: npm run build
-      - name: upload dist Artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload artifact
+        id: upload-artifact
+        uses: actions/upload-pages-artifact@v3 # v4.6.2
         with:
-          name: dist
+          name: github-pages
           path: dist
+          # retention-days: ${{ inputs.retention-days }}
+          # if-no-files-found: error
 
   deploy: 
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download dist Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: ddist
-      - name: Deploy to server
-        run: echo "Deploying to server..."
+     needs: build
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+     permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+     environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Specify runner + deployment step
+     runs-on: ubuntu-latest
+     steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4 # or specific "vX.X.X" version tag for this action
+        with: 
+          token: ${{ secrets.GITHUB_TOKEN }}  # token is provided by default in GitHub-hosted runners
   
